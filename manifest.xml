@@ -1,0 +1,12 @@
+<package>
+  <description brief="nodemon_msgs">
+   Messages for node monitoring features.
+  </description>
+  <author>Tim Niemueller</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/nodemon_msgs</url>
+
+</package>
+
+
