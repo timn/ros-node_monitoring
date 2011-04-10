@@ -1,0 +1,12 @@
+<package>
+  <description brief="nodemon_tui">
+    Node monitoring text-based user interface.
+  </description>
+  <author>Tim Niemueller</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/nodemon_tui</url>
+  <depend package="roscpp"/>
+  <depend package="nodemon_msgs"/>
+</package>
+
