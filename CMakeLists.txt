@@ -25,6 +25,7 @@ set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 rosbuild_add_library(nodemon src/state_publisher.cpp)
 
 rosbuild_add_executable(example_state_publisher src/examples/publisher.cpp)
+rosbuild_add_executable(example_state_multi_publisher src/examples/multi_publisher.cpp)
 target_link_libraries(example_state_publisher nodemon)
 rosbuild_add_executable(example_state_subscriber src/examples/subscriber.cpp)
 target_link_libraries(example_state_subscriber nodemon)
