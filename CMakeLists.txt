@@ -17,13 +17,21 @@ set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 #set the default path for built libraries to the "lib" directory
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
 
+# Fedora
 pkg_check_modules(NCURSES ncursesw)
-
 if(NCURSES_FOUND)
   include_directories(${NCURSES_INCLUDE_DIRS})
   link_libraries(${NCURSES_LIBRARIES})
 else()
-  message(FATAL_ERROR "ncurses not found on system.")
+  message("-- Checking for ncursesw library")
+  # Ubuntu
+  find_library(NCURSES_LIB ncursesw)
+  if(NCURSES_LIB)
+    include_directories(/usr/include/ncursesw)
+    link_libraries(${NCURSES_LIB})
+  else()
+    message(FATAL_ERROR "ncurses not found on system.")
+  endif()
 endif()
 
 rosbuild_add_executable(nodemon_tui src/main.cpp src/nodemon_tui.cpp)
