@@ -67,6 +67,7 @@ class NodeMonTUI
   void read_key();
   void reorder();
   void add_node(std::string nodename);
+  void clear();
 
  private:
   ros::NodeHandle &__nh;

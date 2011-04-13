@@ -223,6 +223,8 @@ NodeMonTUI::read_key()
   // key code 27 is the Esc key
   if (((key == 27) && (getch() == ERR)) || (key == 'q')) {
     ros::shutdown();
+  } else if (key == 'c') {
+    clear();
   } else if (key == KEY_UP) {
     wscrl(__win_msgs,  1);
   } else if (key == KEY_DOWN) {
@@ -248,6 +250,18 @@ NodeMonTUI::add_node(std::string nodename)
   reorder();
 }
 
+
+void
+NodeMonTUI::clear()
+{
+  __ninfo.clear();
+  messages.clear();
+  __node_width = MIN_NODE_WIDTH;
+  erase();
+  reset_screen(/* force */ true);
+  update_screen();
+  print_messages();
+}
 
 void
 NodeMonTUI::update_timer_cb(const ros::WallTimerEvent& event)
