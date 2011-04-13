@@ -1,0 +1,16 @@
+<package>
+  <description brief="nodemon_py">
+
+     nodemon_py
+
+  </description>
+  <author>Tim Niemueller</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/nodemon_py</url>
+  <depend package="rospy"/>
+  <depend package="nodemon_msgs"/>
+
+</package>
+
+
