@@ -47,6 +47,9 @@
 #define CPAIR_BLACK_BG     4
 #define CPAIR_ORANGE_BG    5
 
+#define DOT_ROS_DIR ".ros"
+#define NODEMON_CACHE_FILE "nodemon_cache"
+
 #ifndef __NODEMON_TUI_NODEMON_TUI_H_
 #define __NODEMON_TUI_NODEMON_TUI_H_
 
@@ -67,7 +70,7 @@ class NodeMonTUI
   void print_debug(const char *str);
   void read_key();
   void reorder();
-  void add_node(std::string nodename);
+  void add_node(std::string nodename, bool add_to_cache = true);
   void clear();
 
  private:
@@ -75,6 +78,9 @@ class NodeMonTUI
 
   ros::Subscriber  __state_sub;
   ros::WallTimer   __update_timer;
+
+  std::string __cache_path;
+  std::string __dot_ros_dir;
 
   unsigned int __node_width;
   int __wnd_width;

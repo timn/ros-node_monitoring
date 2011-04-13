@@ -24,6 +24,10 @@
 
 #include "nodemon_tui.h"
 
+#include <cstdio>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
   : __nh(nh)
 {
@@ -35,6 +39,7 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
 			       &NodeMonTUI::node_state_cb, this);
   __update_timer = __nh.createWallTimer(ros::WallDuration(UPDATE_INTERVAL_SEC),
 					&NodeMonTUI::update_timer_cb, this);
+
   initscr();   // Start curses mode
   curs_set(0); // invisible cursor
   noecho();    // disable printing of typed characters
@@ -59,6 +64,27 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
   init_pair(CPAIR_BLACK_BG, COLOR_WHITE, COLOR_BLACK);
 
   reset_screen();
+
+  __cache_path = "";
+  // try to read cache
+  const char *home = getenv("HOME");
+  if (home != NULL) {
+    __dot_ros_dir = std::string(home) + "/" DOT_ROS_DIR;
+    __cache_path  = __dot_ros_dir + "/" NODEMON_CACHE_FILE;
+
+    // just in case...
+    mkdir(__dot_ros_dir.c_str(), 0700);
+
+    FILE *f = fopen(__cache_path.c_str(), "r");
+    if (f != NULL) {
+      char tmp[1024];
+      while (fgets(tmp, 1024, f) != NULL) {
+	tmp[strlen(tmp) - 1] = '\0'; // remove newline
+	add_node(tmp, /* add to cache */ false);
+      }
+      fclose(f);
+    }
+  }
 }
 
 
@@ -255,7 +281,7 @@ NodeMonTUI::read_key()
 }
 
 void
-NodeMonTUI::add_node(std::string nodename)
+NodeMonTUI::add_node(std::string nodename, bool add_to_cache)
 {
   node_info_t info;
   info.last_update = ros::WallTime::now();
@@ -269,6 +295,14 @@ NodeMonTUI::add_node(std::string nodename)
   }
 
   reorder();
+
+  if (add_to_cache && __cache_path != "") {
+    FILE *f = fopen(__cache_path.c_str(), "a");
+    if (f != NULL) {
+      fprintf(f, "%s\n", nodename.c_str());
+      fclose(f);
+    }
+  }
 }
 
 
@@ -277,6 +311,14 @@ NodeMonTUI::clear()
 {
   __ninfo.clear();
   messages.clear();
+
+  if (__cache_path != "") {
+    FILE *f = fopen(__cache_path.c_str(), "w");
+    if (f != NULL) {
+      fclose(f);
+    }
+  }
+
   __node_width = MIN_NODE_WIDTH;
   erase();
   reset_screen(/* force */ true);
