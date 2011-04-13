@@ -38,7 +38,8 @@
 #define NODE_START_X 2
 #define NODE_START_Y 2
 
-#define TIMEOUT 5.0
+#define UPDATE_INTERVAL_SEC 0.2
+#define TIMEOUT_SEC 5.0
 
 #define CPAIR_RED          1
 #define CPAIR_ORANGE       2
@@ -81,7 +82,6 @@ class NodeMonTUI
 
   typedef struct {
     ros::WallTime  last_update;
-    int  updates;
     int  x;
     int  y;
     nodemon_msgs::NodeState::ConstPtr last_msg;
@@ -91,7 +91,11 @@ class NodeMonTUI
   typedef std::map<std::string, node_info_t> InfoMap;
   InfoMap __ninfo;
 
-  std::list<std::string> messages;
+  typedef struct {
+    uint8_t state;
+    std::string message;
+  } message_t;
+  std::list<message_t> messages;
 
   WINDOW *__win_msgs;
 };

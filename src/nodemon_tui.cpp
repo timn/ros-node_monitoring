@@ -33,7 +33,7 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
 
   __state_sub = __nh.subscribe("/nodemon/state", 10,
 			       &NodeMonTUI::node_state_cb, this);
-  __update_timer = __nh.createWallTimer(ros::WallDuration(0.2),
+  __update_timer = __nh.createWallTimer(ros::WallDuration(UPDATE_INTERVAL_SEC),
 					&NodeMonTUI::update_timer_cb, this);
   initscr();   // Start curses mode
   curs_set(0); // invisible cursor
@@ -118,7 +118,13 @@ NodeMonTUI::update_screen()
     const wchar_t *cc = L" ";
     int attrs = 0;
 
-    if ((ros::WallTime::now() - i->second.last_update).toSec() > TIMEOUT) {
+    bool state_hang =
+      ((ros::Time::now() - i->second.last_msg->time).toSec() > TIMEOUT_SEC);
+
+    bool timed_out =
+      ((ros::WallTime::now() - i->second.last_update).toSec() > TIMEOUT_SEC);
+
+    if (timed_out) {
       cl = CPAIR_BLACK;
       attrs |= A_BOLD;
       // 231b  hourglass, unsupported in common fonts
@@ -126,11 +132,19 @@ NodeMonTUI::update_screen()
     } else {
       switch (i->second.last_msg->state) {
       case nodemon_msgs::NodeState::STARTING:
-	cl = CPAIR_BLACK_BG;
-	attrs |= A_DIM;
+	//cl = CPAIR_BLACK_BG;
+	attrs |= A_BOLD;
 	break;
-      case nodemon_msgs::NodeState::RECOVERING: cl = CPAIR_ORANGE;       break;
-      case nodemon_msgs::NodeState::ERROR:      cl = CPAIR_ORANGE_BG;    break;
+
+      case nodemon_msgs::NodeState::RECOVERING:
+	cl = CPAIR_ORANGE;
+	attrs |= A_BOLD;
+	break;
+
+      case nodemon_msgs::NodeState::ERROR:
+	cl = CPAIR_ORANGE;
+	break;
+
       case nodemon_msgs::NodeState::FATAL:
 	cl = CPAIR_RED;
 	cc = L"\u2620";
@@ -143,9 +157,18 @@ NodeMonTUI::update_screen()
       default:
 	break;
       }
+
+      if (state_hang) {
+	// 231b  hourglass, unsupported in common fonts
+	cc = L"\u231a";
+      }
     }
-    if (i->second.updates == 0) {
-      if (i->second.last_msg->state == nodemon_msgs::NodeState::FATAL) {
+    if (((ros::WallTime::now() - i->second.last_update).toSec() <=
+	 UPDATE_INTERVAL_SEC))
+    {
+      if ((i->second.last_msg->state == nodemon_msgs::NodeState::FATAL) ||
+	  state_hang)
+      {
 	cc = L"\u2661";
       } else {
 	cc = L"\u2665";
@@ -157,7 +180,6 @@ NodeMonTUI::update_screen()
     mvaddwstr(i->second.y, i->second.x, cc);
     mvaddstr(i->second.y, i->second.x + 2, i->first.c_str());
     attroff(attrs);
-    i->second.updates += 1;
   }
   refresh(); // Print it on to the real screen
 }
@@ -237,7 +259,6 @@ NodeMonTUI::add_node(std::string nodename)
 {
   node_info_t info;
   info.last_update = ros::WallTime::now();
-  info.updates = 0;
   info.x = 0;
   info.y = 0;
   __ninfo[nodename] = info;
@@ -278,20 +299,46 @@ NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
   if (__ninfo.find(msg->nodename) == __ninfo.end()) {
     add_node(msg->nodename);
   }
-  __ninfo[msg->nodename].updates     = 0;
-  __ninfo[msg->nodename].last_update =
-    ros::WallTime(msg->time.sec, msg->time.nsec);
-  __ninfo[msg->nodename].last_msg    = msg;
 
-  if ((msg->state == nodemon_msgs::NodeState::ERROR) ||
-      (msg->state == nodemon_msgs::NodeState::FATAL) ||
-      (msg->state == nodemon_msgs::NodeState::RECOVERING))
+  ros::WallTime msg_walltime(msg->time.sec, msg->time.nsec);
+
+  if (((msg->state == nodemon_msgs::NodeState::ERROR) ||
+       (msg->state == nodemon_msgs::NodeState::FATAL) ||
+       (msg->state == nodemon_msgs::NodeState::RECOVERING)) &&
+      (msg->message != "") &&
+      (!__ninfo[msg->nodename].last_msg ||
+       ((__ninfo[msg->nodename].last_msg->time != msg->time) &&
+	(__ninfo[msg->nodename].last_msg->message != msg->message))))
   {
-    if (msg->message != "") {
-      messages.push_back(msg->message);
-      if (messages.size() > 100) {
-	messages.pop_front();
-      }
+    tm time_tm;
+    time_t timet;
+    timet = msg_walltime.sec;
+    localtime_r(&timet, &time_tm);
+           // stat  date   message              NULL
+    size_t ml = 2 + 19 + msg->message.size() + 1;
+    char mstr[ml];
+
+    const char *state = "F";
+    if (msg->state == nodemon_msgs::NodeState::ERROR) {
+      state = "E";
+    } else if (msg->state == nodemon_msgs::NodeState::RECOVERING) {
+      state = "R";
+    }
+
+    sprintf(mstr, "%s %02d:%02d:%02d.%09u %s", state, time_tm.tm_hour,
+	    time_tm.tm_min, time_tm.tm_sec, msg_walltime.nsec,
+	    msg->message.c_str());
+
+    message_t m;
+    m.state   = msg->state;
+    m.message = mstr;
+
+    messages.push_back(m);
+    if (messages.size() > 100) {
+      messages.pop_front();
     }
   }
+
+  __ninfo[msg->nodename].last_update = ros::WallTime::now();
+  __ninfo[msg->nodename].last_msg    = msg;
 }
