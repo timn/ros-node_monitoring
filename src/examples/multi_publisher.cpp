@@ -28,18 +28,18 @@
 
 
 ros::Publisher g_pub;
-std::map<std::string, int> g_nodes;
+std::map<std::string, nodemon_msgs::NodeState> g_nodes;
 
 unsigned int msgnum = 0;
 
 void timer_cb(const ros::WallTimerEvent& event)
 {
-  std::map<std::string, int>::iterator p;
+  std::map<std::string, nodemon_msgs::NodeState>::iterator p;
   for (p = g_nodes.begin(); p != g_nodes.end(); ++p) {
-    nodemon_msgs::NodeState msg;
-    msg.nodename = p->first;
-    msg.state    = p->second;
-    msg.time = ros::Time(event.current_real.sec, event.current_real.nsec);
+    nodemon_msgs::NodeState &msg = p->second;
+    if (msg.state == nodemon_msgs::NodeState::RUNNING) {
+      msg.time = ros::Time(event.current_real.sec, event.current_real.nsec);
+    }
     msg.message  = "";
 
     if (msg.state == nodemon_msgs::NodeState::FATAL) {
@@ -55,6 +55,17 @@ void timer_cb(const ros::WallTimerEvent& event)
 }
 
 
+void
+add_fake_node(std::string nodename, uint8_t state)
+{
+  nodemon_msgs::NodeState msg;
+  msg.nodename = nodename;
+  msg.state = state;
+  msg.time = ros::Time::now();
+
+  g_nodes[nodename] = msg;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -65,15 +76,15 @@ main(int argc, char **argv)
 
   ros::WallTimer t = n.createWallTimer(ros::WallDuration(1.0), timer_cb);
 
-  g_nodes["/test1"] = nodemon_msgs::NodeState::STARTING;
-  g_nodes["/test2"] = nodemon_msgs::NodeState::RUNNING;
-  g_nodes["/test3"] = nodemon_msgs::NodeState::RECOVERING;
-  g_nodes["/test4"] = nodemon_msgs::NodeState::ERROR;
-  g_nodes["/test5"] = nodemon_msgs::NodeState::FATAL;
-  g_nodes["/test6"] = nodemon_msgs::NodeState::RUNNING;
-  g_nodes["/test7"] = nodemon_msgs::NodeState::RUNNING;
-  g_nodes["/test8"] = nodemon_msgs::NodeState::RUNNING;
-  g_nodes["/test9"] = nodemon_msgs::NodeState::STOPPING;
+  add_fake_node("/test1", nodemon_msgs::NodeState::STARTING);
+  add_fake_node("/test2", nodemon_msgs::NodeState::RUNNING);
+  add_fake_node("/test3", nodemon_msgs::NodeState::RECOVERING);
+  add_fake_node("/test4", nodemon_msgs::NodeState::ERROR);
+  add_fake_node("/test5", nodemon_msgs::NodeState::FATAL);
+  add_fake_node("/test6", nodemon_msgs::NodeState::RUNNING);
+  add_fake_node("/test7", nodemon_msgs::NodeState::RUNNING);
+  add_fake_node("/test8", nodemon_msgs::NodeState::RUNNING);
+  add_fake_node("/test9", nodemon_msgs::NodeState::STOPPING);
 
   ros::spin();
 }
