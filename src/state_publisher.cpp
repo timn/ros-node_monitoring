@@ -99,6 +99,10 @@ NodeStatePublisher::set_recovering(std::string msg)
 void
 NodeStatePublisher::heartbeat_timer_cb(const ros::WallTimerEvent& event)
 {
-  __state_msg.time = ros::Time(event.current_real.sec, event.current_real.nsec);
+  if (__state_msg.state == nodemon_msgs::NodeState::RUNNING) {
+    // we set the time automatically only when running!
+    __state_msg.time =
+      ros::Time(event.current_real.sec, event.current_real.nsec);
+  }
   publish_state();  
 }
