@@ -45,7 +45,7 @@
 #define CPAIR_ORANGE       2
 #define CPAIR_BLACK        3
 #define CPAIR_BLACK_BG     4
-#define CPAIR_ORANGE_BG    5
+#define CPAIR_MAGENTA      5
 
 #define DOT_ROS_DIR ".ros"
 #define NODEMON_CACHE_FILE "nodemon_cache"
@@ -72,6 +72,7 @@ class NodeMonTUI
   void reorder();
   void add_node(std::string nodename, bool add_to_cache = true);
   void clear();
+  void clear_messages();
 
  private:
   ros::NodeHandle &__nh;

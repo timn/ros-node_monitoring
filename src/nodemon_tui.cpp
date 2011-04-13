@@ -59,7 +59,7 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
   //init_color(COLOR_ORANGE,    1000, 500,   0);
   init_pair(CPAIR_RED, COLOR_RED, -1);
   init_pair(CPAIR_ORANGE, COLOR_YELLOW, -1);
-  init_pair(CPAIR_ORANGE_BG, COLOR_BLACK, COLOR_YELLOW);
+  init_pair(CPAIR_MAGENTA, COLOR_MAGENTA, -1);
   init_pair(CPAIR_BLACK, COLOR_BLACK, -1);
   init_pair(CPAIR_BLACK_BG, COLOR_WHITE, COLOR_BLACK);
 
@@ -98,9 +98,7 @@ NodeMonTUI::~NodeMonTUI()
 void
 NodeMonTUI::print_debug(const char *str)
 {
-  int w, h;
-  getmaxyx(stdscr, h, w);
-  mvaddstr(h-1, 3, str);
+  mvaddstr(__wnd_height-1, 3, str);
 }
 
 
@@ -144,35 +142,45 @@ NodeMonTUI::update_screen()
     const wchar_t *cc = L" ";
     int attrs = 0;
 
-    bool state_hang =
-      ((ros::Time::now() - i->second.last_msg->time).toSec() > TIMEOUT_SEC);
+    ros::WallTime now = ros::WallTime::now();
 
     bool timed_out =
-      ((ros::WallTime::now() - i->second.last_update).toSec() > TIMEOUT_SEC);
+      ((now - i->second.last_update).toSec() > TIMEOUT_SEC);
 
-    if (timed_out) {
+    bool state_hang = i->second.last_msg &&
+      ((ros::Time::now() - i->second.last_msg->time).toSec() > TIMEOUT_SEC);
+
+    if (! i->second.last_msg) {
+      // Node which has been added from cache, we're waiting for a heartbeat
+      cl = CPAIR_BLACK;
+      attrs |= A_BOLD;
+      cc = L"\u2300";
+
+    } else if (timed_out) {
       cl = CPAIR_BLACK;
       attrs |= A_BOLD;
       // 231b  hourglass, unsupported in common fonts
       cc = L"\u231a";
+
     } else {
       switch (i->second.last_msg->state) {
       case nodemon_msgs::NodeState::STARTING:
-	//cl = CPAIR_BLACK_BG;
 	attrs |= A_BOLD;
 	break;
 
       case nodemon_msgs::NodeState::RECOVERING:
 	cl = CPAIR_ORANGE;
-	attrs |= A_BOLD;
+	cc = L"\u26a0";
 	break;
 
       case nodemon_msgs::NodeState::ERROR:
-	cl = CPAIR_ORANGE;
+	cl = CPAIR_RED;
+	cc = L"\u26a0";
 	break;
 
       case nodemon_msgs::NodeState::FATAL:
 	cl = CPAIR_RED;
+	attrs |= A_BOLD;
 	cc = L"\u2620";
 	break;
 
@@ -189,8 +197,8 @@ NodeMonTUI::update_screen()
 	cc = L"\u231a";
       }
     }
-    if (((ros::WallTime::now() - i->second.last_update).toSec() <=
-	 UPDATE_INTERVAL_SEC))
+    if (i->second.last_msg &&
+	((now - i->second.last_update).toSec() <= UPDATE_INTERVAL_SEC))
     {
       if ((i->second.last_msg->state == nodemon_msgs::NodeState::FATAL) ||
 	  state_hang)
@@ -242,17 +250,14 @@ NodeMonTUI::print_messages()
 void
 NodeMonTUI::reorder()
 {
-  int x = NODE_START_X;
-  int y = NODE_START_Y;
-
-  unsigned int line_entries = 0;
+  unsigned int x = NODE_START_X;
+  unsigned int y = NODE_START_Y;
 
   for (InfoMap::iterator i = __ninfo.begin(); i != __ninfo.end(); ++i) {
     i->second.x = x;
     i->second.y = y;
 
-    if (++line_entries >= NODES_PER_LINE) {
-      line_entries = 0;
+    if ((x + (2 * __node_width)) > __wnd_width) {
       x  = NODE_START_X;
       y += 1;
     } else {
@@ -273,6 +278,8 @@ NodeMonTUI::read_key()
     ros::shutdown();
   } else if (key == 'c') {
     clear();
+  } else if (key == 'C') {
+    clear_messages();
   } else if (key == KEY_UP) {
     wscrl(__win_msgs,  1);
   } else if (key == KEY_DOWN) {
@@ -289,8 +296,8 @@ NodeMonTUI::add_node(std::string nodename, bool add_to_cache)
   info.y = 0;
   __ninfo[nodename] = info;
 
-  if ((nodename.length() + 2) > __node_width) {
-    __node_width = nodename.length() + 2;
+  if ((nodename.length() + 6) > __node_width) {
+    __node_width = nodename.length() + 6;
     reset_screen(/* force */ true);
   }
 
@@ -320,6 +327,17 @@ NodeMonTUI::clear()
   }
 
   __node_width = MIN_NODE_WIDTH;
+  erase();
+  reset_screen(/* force */ true);
+  update_screen();
+  print_messages();
+}
+
+
+void
+NodeMonTUI::clear_messages()
+{
+  messages.clear();
   erase();
   reset_screen(/* force */ true);
   update_screen();
