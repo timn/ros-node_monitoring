@@ -33,7 +33,7 @@
 #define MIN_SCREEN_WIDTH  80
 #define MIN_SCREEN_HEIGHT 25
 
-#define NODE_WIDTH 24
+#define MIN_NODE_WIDTH 24
 #define NODES_PER_LINE 3
 #define NODE_START_X 2
 #define NODE_START_Y 2
@@ -60,6 +60,7 @@ class NodeMonTUI
   void update_timer_cb(const ros::WallTimerEvent& event);
 
  private:
+  void reset_screen(bool force = false);
   void update_screen();
   void print_messages();
   void print_debug(const char *str);
@@ -72,6 +73,10 @@ class NodeMonTUI
 
   ros::Subscriber  __state_sub;
   ros::WallTimer   __update_timer;
+
+  unsigned int __node_width;
+  int __wnd_width;
+  int __wnd_height;
 
   typedef struct {
     ros::WallTime  last_update;
@@ -87,7 +92,7 @@ class NodeMonTUI
 
   std::list<std::string> messages;
 
-  WINDOW *__msgwin;
+  WINDOW *__win_msgs;
 };
 
 

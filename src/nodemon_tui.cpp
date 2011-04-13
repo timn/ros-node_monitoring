@@ -27,27 +27,19 @@
 NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
   : __nh(nh)
 {
+  __wnd_width = __wnd_height = 0;
+  __node_width = MIN_NODE_WIDTH;
+  __win_msgs = NULL;
+
   __state_sub = __nh.subscribe("/nodemon/state", 10,
 			       &NodeMonTUI::node_state_cb, this);
   __update_timer = __nh.createWallTimer(ros::WallDuration(0.2),
 					&NodeMonTUI::update_timer_cb, this);
-  initscr(); // Start curses mode
-  curs_set(0);
-  noecho();
-  cbreak();
-  timeout(0);
-
-  attron(A_BOLD);
-  border(0, 0, 0, 0, 0, 0, 0, 0);
-  int w, h;
-  getmaxyx(stdscr, h, w);
-  mvaddch(h-8, 0, ACS_LTEE);
-  move(h - 8, 1);
-  hline(0, w-2);
-  mvaddch(h-8, w-1, ACS_RTEE);
-  mvaddstr(0, 2, " Nodes ");
-  mvaddstr(h-8, 2, " Messages ");
-  attroff(A_BOLD);
+  initscr();   // Start curses mode
+  curs_set(0); // invisible cursor
+  noecho();    // disable printing of typed characters
+  cbreak();    // disable line buffering
+  timeout(0);  // make getch return immediately
 
   if(has_colors() == FALSE) {
     endwin();
@@ -55,7 +47,8 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
     exit(1);
   }
   start_color();
-  use_default_colors();
+  use_default_colors();   // initialize default colors
+  // defining colors doesn't work in bash/gnome-terminal
   //init_color(COLOR_LIGHT_GREY, 750, 750, 750);
   //init_color(COLOR_DARK_GREY,  250, 250, 250);
   //init_color(COLOR_ORANGE,    1000, 500,   0);
@@ -65,14 +58,13 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
   init_pair(CPAIR_BLACK, COLOR_BLACK, -1);
   init_pair(CPAIR_BLACK_BG, COLOR_WHITE, COLOR_BLACK);
 
-  __msgwin = newwin(6, w-2, h-7, 1);
-  scrollok(__msgwin, TRUE);
+  reset_screen();
 }
 
 
 NodeMonTUI::~NodeMonTUI()
 {
-  delwin(__msgwin);
+  delwin(__win_msgs);
   endwin(); // End curses mode
 }
 
@@ -83,6 +75,39 @@ NodeMonTUI::print_debug(const char *str)
   int w, h;
   getmaxyx(stdscr, h, w);
   mvaddstr(h-1, 3, str);
+}
+
+
+void
+NodeMonTUI::reset_screen(bool force)
+{
+  int h, w;
+  getmaxyx(stdscr, h, w);
+
+  if (force) {
+    __wnd_width = __wnd_height = -1;
+  }
+
+  if (w != __wnd_width || h != __wnd_height) {
+    __wnd_width  = w;
+    __wnd_height = h;
+
+    erase();
+
+    attron(A_BOLD);
+    border(0, 0, 0, 0, 0, 0, 0, 0);
+    mvaddch(h-8, 0, ACS_LTEE);
+    move(h - 8, 1);
+    hline(0, w-2);
+    mvaddch(h-8, w-1, ACS_RTEE);
+    mvaddstr(0, 2, " Nodes ");
+    mvaddstr(h-8, 2, " Messages ");
+    attroff(A_BOLD);
+
+    if (__win_msgs)  delwin(__win_msgs);
+    __win_msgs = newwin(6, w-2, h-7, 1);
+    scrollok(__win_msgs, TRUE);
+  }
 }
 
 void
@@ -142,18 +167,33 @@ void
 NodeMonTUI::print_messages()
 {
   int y = 0;
-  std::list<std::string>::iterator m;
+  std::list<message_t>::iterator m;
   for (m = messages.begin(); m != messages.end(); ++m) {
-    mvwaddstr(__msgwin, y++, 0, m->c_str());
+    chtype   cl = 0;
+    int attrs = 0;
+    switch (m->state) {
+    case nodemon_msgs::NodeState::ERROR:
+      cl = CPAIR_ORANGE;
+      break;
+    case nodemon_msgs::NodeState::RECOVERING:
+      cl = CPAIR_ORANGE;
+      attrs |= A_BOLD;
+      break;
+    default:
+      cl = CPAIR_RED;
+      break;
+    }
+    attrs |= COLOR_PAIR(cl);
+    wattron(__win_msgs, attrs);
+    mvwaddstr(__win_msgs, y++, 0, m->message.c_str());
+    wattroff(__win_msgs, attrs);
   }
-  wrefresh(__msgwin);
+  wrefresh(__win_msgs);
 }
 
 void
 NodeMonTUI::reorder()
 {
-  int w, h;
-  getmaxyx(stdscr, h, w);
   int x = NODE_START_X;
   int y = NODE_START_Y;
 
@@ -168,11 +208,9 @@ NodeMonTUI::reorder()
       x  = NODE_START_X;
       y += 1;
     } else {
-      x += NODE_WIDTH;
+      x += __node_width;
     }
   }
-
-  move(h, w);
 }
 
 
@@ -186,9 +224,9 @@ NodeMonTUI::read_key()
   if (((key == 27) && (getch() == ERR)) || (key == 'q')) {
     ros::shutdown();
   } else if (key == KEY_UP) {
-    wscrl(__msgwin,  1);
+    wscrl(__win_msgs,  1);
   } else if (key == KEY_DOWN) {
-    wscrl(__msgwin, -1);
+    wscrl(__win_msgs, -1);
   }
 }
 
@@ -202,6 +240,11 @@ NodeMonTUI::add_node(std::string nodename)
   info.y = 0;
   __ninfo[nodename] = info;
 
+  if ((nodename.length() + 2) > __node_width) {
+    __node_width = nodename.length() + 2;
+    reset_screen(/* force */ true);
+  }
+
   reorder();
 }
 
@@ -209,6 +252,7 @@ NodeMonTUI::add_node(std::string nodename)
 void
 NodeMonTUI::update_timer_cb(const ros::WallTimerEvent& event)
 {
+  reset_screen();
   update_screen();
   print_messages();
   read_key();
