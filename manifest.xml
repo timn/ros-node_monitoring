@@ -8,9 +8,11 @@
   <license>BSD</license>
   <review status="unreviewed" notes=""/>
   <url>http://ros.org/wiki/nodemon_py</url>
+  <export>
+    <rosdoc config="rosdoc.yaml" />
+  </export>
   <depend package="rospy"/>
   <depend package="nodemon_msgs"/>
-
 </package>
 
 
