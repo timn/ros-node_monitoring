@@ -1,7 +1,7 @@
 *~
 *.pyc
-/bin/
-/build/
+/_build/
+/doc/
 /lib/
 /msg_gen/
 /msg/*/
