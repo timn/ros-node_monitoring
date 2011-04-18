@@ -44,6 +44,7 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
   __wnd_width = __wnd_height = 0;
   __node_width = MIN_NODE_WIDTH;
   __win_msgs = NULL;
+  __msg_start = 0;
 
   __state_sub = __nh.subscribe("/nodemon/state", 10,
 			       &NodeMonTUI::node_state_cb, this);
@@ -55,6 +56,7 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
   noecho();    // disable printing of typed characters
   cbreak();    // disable line buffering
   timeout(0);  // make getch return immediately
+  keypad(stdscr, TRUE);
 
   if(has_colors() == FALSE) {
     endwin();
@@ -143,16 +145,16 @@ NodeMonTUI::reset_screen(bool force)
 
     attron(A_BOLD);
     border(0, 0, 0, 0, 0, 0, 0, 0);
-    mvaddch(h-8, 0, ACS_LTEE);
-    move(h - 8, 1);
+    mvaddch(h - (NUM_MSG_LINES + 2), 0, ACS_LTEE);
+    move(h - (NUM_MSG_LINES + 2), 1);
     hline(0, w-2);
-    mvaddch(h-8, w-1, ACS_RTEE);
+    mvaddch(h - (NUM_MSG_LINES + 2), w-1, ACS_RTEE);
     mvaddstr(0, 2, " Nodes ");
-    mvaddstr(h-8, 2, " Messages ");
+    mvaddstr(h - (NUM_MSG_LINES + 2), 2, " Messages ");
     attroff(A_BOLD);
 
     if (__win_msgs)  delwin(__win_msgs);
-    __win_msgs = newwin(6, w-2, h-7, 1);
+    __win_msgs = newwin(NUM_MSG_LINES, w - 2, h - (NUM_MSG_LINES+1), 1);
     scrollok(__win_msgs, TRUE);
   }
 }
@@ -251,21 +253,28 @@ NodeMonTUI::update_screen()
 void
 NodeMonTUI::print_messages()
 {
+  werase(__win_msgs);
+
+
   int y = 0;
-  std::list<message_t>::iterator m;
-  for (m = messages.begin(); m != messages.end(); ++m) {
+  std::list<message_t>::size_type num = 0;
+  std::list<message_t>::iterator m = __messages.begin();
+  std::list<message_t>::size_type i;
+  for (i = 0; m != __messages.end() && i < __msg_start; ++m, ++i) ;
+
+  for (; m != __messages.end() && num < NUM_MSG_LINES; ++m, ++num) {
     chtype   cl = 0;
     int attrs = 0;
     switch (m->state) {
     case nodemon_msgs::NodeState::ERROR:
-      cl = CPAIR_ORANGE;
+      cl = CPAIR_RED;
       break;
     case nodemon_msgs::NodeState::RECOVERING:
       cl = CPAIR_ORANGE;
-      attrs |= A_BOLD;
       break;
     default:
       cl = CPAIR_RED;
+      attrs |= A_BOLD;
       break;
     }
     attrs |= COLOR_PAIR(cl);
@@ -308,16 +317,23 @@ NodeMonTUI::read_key()
   if (key == ERR) return;
 
   // key code 27 is the Esc key
-  if (((key == 27) && (getch() == ERR)) || (key == 'q')) {
+  if (key == KEY_UP) {
+    if (__msg_start > 0) {
+      --__msg_start;
+      print_messages();
+      print_debug("UP");
+    }
+  } else if (key == KEY_DOWN) {
+    if (__msg_start < __messages.size() - NUM_MSG_LINES) {
+      ++__msg_start;
+      print_messages();
+    }
+  } else if (((key == 27) && (getch() == ERR)) || (key == 'q')) {
     ros::shutdown();
   } else if (key == 'c') {
     clear();
   } else if (key == 'C') {
     clear_messages();
-  } else if (key == KEY_UP) {
-    wscrl(__win_msgs,  1);
-  } else if (key == KEY_DOWN) {
-    wscrl(__win_msgs, -1);
   }
 }
 
@@ -356,7 +372,7 @@ void
 NodeMonTUI::clear()
 {
   __ninfo.clear();
-  messages.clear();
+  __messages.clear();
 
   if (__cache_path != "") {
     FILE *f = fopen(__cache_path.c_str(), "w");
@@ -377,7 +393,7 @@ NodeMonTUI::clear()
 void
 NodeMonTUI::clear_messages()
 {
-  messages.clear();
+  __messages.clear();
   erase();
   reset_screen(/* force */ true);
   update_screen();
@@ -420,8 +436,8 @@ NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
     time_t timet;
     timet = msg_walltime.sec;
     localtime_r(&timet, &time_tm);
-           // stat  date   message              NULL
-    size_t ml = 2 + 19 + msg->message.size() + 1;
+           // stat  date  nodename              message              NULL
+    size_t ml = 2 + 21 + msg->nodename.size() + msg->message.size() + 1;
     char mstr[ml];
 
     const char *state = "F";
@@ -431,17 +447,18 @@ NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
       state = "R";
     }
 
-    sprintf(mstr, "%s %02d:%02d:%02d.%09u %s", state, time_tm.tm_hour,
+    sprintf(mstr, "%s %02d:%02d:%02d.%09u %s: %s", state, time_tm.tm_hour,
 	    time_tm.tm_min, time_tm.tm_sec, msg_walltime.nsec,
-	    msg->message.c_str());
+	    msg->nodename.c_str(), msg->message.c_str());
 
     message_t m;
     m.state   = msg->state;
     m.message = mstr;
 
-    messages.push_back(m);
-    if (messages.size() > 100) {
-      messages.pop_front();
+    __messages.push_front(m);
+    __msg_start = 0;
+    if (__messages.size() > MAX_NUM_MSGS) {
+      __messages.pop_back();
     }
   }
 

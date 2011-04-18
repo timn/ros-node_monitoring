@@ -38,6 +38,9 @@
 #define NODE_START_X 2
 #define NODE_START_Y 2
 
+#define NUM_MSG_LINES 6
+#define MAX_NUM_MSGS 100
+
 #define UPDATE_INTERVAL_SEC 0.2
 #define TIMEOUT_SEC 5.0
 
@@ -102,7 +105,9 @@ class NodeMonTUI
     uint8_t state;
     std::string message;
   } message_t;
-  std::list<message_t> messages;
+  std::list<message_t> __messages;
+  std::list<message_t>::size_type __msg_start;
+  
 
   WINDOW *__win_msgs;
 };
