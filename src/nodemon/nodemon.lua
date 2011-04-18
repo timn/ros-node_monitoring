@@ -98,9 +98,11 @@ end
 -- recover without completely restarting it. The message should
 -- give a meaningful and concise description of the cause of the
 -- error.
--- @param msg message describing the cause of the fatal error
-function NodeStatePublisher:set_fatal(msg)
-   local message = msg or ""
+-- @param format message format describing the cause of the fatal error
+-- @param ... arguments as required when passing format to string.format().
+function NodeStatePublisher:set_fatal(format, ...)
+   local message = ""
+   if format then message = string.format(format, ...) end
    self.state_msg.values.state    = self.state_pub.msgspec.constants.FATAL.value
    self.state_msg.values.time     = roslua.Time.now()
    self.state_msg.values.message  = message
@@ -115,9 +117,11 @@ end
 -- humans. Once recovery is started, call set_recovering().  The
 -- message should give a meaningful and concise description of
 -- the cause of the error.
--- @param msg message describing the cause of the fatal error
-function NodeStatePublisher:set_error(msg)
-   local message = msg or ""
+-- @param format message format describing the cause of the fatal error
+-- @param ... arguments as required when passing format to string.format().
+function NodeStatePublisher:set_error(format, ...)
+   local message = ""
+   if format then message = string.format(format, ...) end
    self.state_msg.values.state    = self.state_pub.msgspec.constants.ERROR.value
    self.state_msg.values.time     = roslua.Time.now()
    self.state_msg.values.message  = message
@@ -130,10 +134,12 @@ end
 -- time it cannot process any new requests or commands. Once
 -- recovery is finished call set_running() to indicate that the
 -- node is fully operational again.
--- @param msg a message describing the recovery method or
+-- @param format message format describing the recovery method or
 -- procedure briefly, e.g. "moving arm to safe position".
-function NodeStatePublisher:set_recovering(msg)
-   local message = msg or ""
+-- @param ... arguments as required when passing format to string.format().
+function NodeStatePublisher:set_recovering(format, ...)
+   local message = ""
+   if format then message = string.format(format, ...) end
    self.state_msg.values.state    =
       self.state_pub.msgspec.constants.RECOVERING.value
    self.state_msg.values.time     = roslua.Time.now()
