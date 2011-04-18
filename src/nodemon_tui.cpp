@@ -28,6 +28,16 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
+/** @class NodeMonTUI "nodemon_tui.h"
+ * Node monitoring TUI.
+ * This class implements a text-based user interface (TUI) using the ncurses
+ * library. It shows heartbeat and error information about processes.
+ * @author Tim Niemueller
+ */
+
+/** Constructor.
+ * @param nh ROS node handle
+ */
 NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
   : __nh(nh)
 {
@@ -88,6 +98,7 @@ NodeMonTUI::NodeMonTUI(ros::NodeHandle &nh)
 }
 
 
+/** Destructor. */
 NodeMonTUI::~NodeMonTUI()
 {
   delwin(__win_msgs);
@@ -95,6 +106,11 @@ NodeMonTUI::~NodeMonTUI()
 }
 
 
+/** Print debug message.
+ * The message will appear in the lower left corner of the main window.
+ * Consecutive calls to this method will overwrite the previous message.
+ * @param str string to print
+ */
 void
 NodeMonTUI::print_debug(const char *str)
 {
@@ -102,6 +118,13 @@ NodeMonTUI::print_debug(const char *str)
 }
 
 
+/** Reset the screen.
+ * If the screen size has changed, or the @p force flag is set to true,
+ * the screen will be erased and the chrome (borders, titles) will be
+ * drawn.
+ * @param force true to force a re-draw, false to only redraw if screen
+ * dimensions have changed.
+ */
 void
 NodeMonTUI::reset_screen(bool force)
 {
@@ -134,6 +157,9 @@ NodeMonTUI::reset_screen(bool force)
   }
 }
 
+/** Update screen content.
+ * This will print the current information about nodes.
+ */
 void
 NodeMonTUI::update_screen()
 {
@@ -219,6 +245,9 @@ NodeMonTUI::update_screen()
 }
 
 
+/** Print messages.
+ * This prints the message strings.
+ */
 void
 NodeMonTUI::print_messages()
 {
@@ -247,6 +276,10 @@ NodeMonTUI::print_messages()
   wrefresh(__win_msgs);
 }
 
+
+/** Reorder nodes.
+ * This recalculates the positions for all nodes.
+ */
 void
 NodeMonTUI::reorder()
 {
@@ -267,6 +300,7 @@ NodeMonTUI::reorder()
 }
 
 
+/** Read a key and call the appropriate callbacks. */
 void
 NodeMonTUI::read_key()
 {
@@ -287,6 +321,10 @@ NodeMonTUI::read_key()
   }
 }
 
+/** Add a node.
+ * @param nodename name of the node to add
+ * @param add_to_cache true to add the node to the cache file, false not to
+ */
 void
 NodeMonTUI::add_node(std::string nodename, bool add_to_cache)
 {
@@ -313,6 +351,7 @@ NodeMonTUI::add_node(std::string nodename, bool add_to_cache)
 }
 
 
+/** Clear the list of nodes and messages. */
 void
 NodeMonTUI::clear()
 {
@@ -334,6 +373,7 @@ NodeMonTUI::clear()
 }
 
 
+/** Clear message list. */
 void
 NodeMonTUI::clear_messages()
 {
@@ -344,6 +384,9 @@ NodeMonTUI::clear_messages()
   print_messages();
 }
 
+/** Callback for update timer event.
+ * @param event event information
+ */
 void
 NodeMonTUI::update_timer_cb(const ros::WallTimerEvent& event)
 {
@@ -353,6 +396,9 @@ NodeMonTUI::update_timer_cb(const ros::WallTimerEvent& event)
   read_key();
 }
 
+/** Callback when receiving a node state message.
+ * @param msg received message.
+ */
 void
 NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
 {
