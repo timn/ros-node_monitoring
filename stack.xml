@@ -1,0 +1,8 @@
+<stack>
+  <description brief="node_monitoring">node_monitoring</description>
+  <author>Maintained by Tim Niemueller</author>
+  <license>BSD</license>  
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/node_monitoring</url>
+  <depend stack="ros" /> <!-- rospy, roscpp -->
+</stack>

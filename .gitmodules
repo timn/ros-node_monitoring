@@ -1,0 +1,15 @@
+[submodule "nodemon_cpp"]
+	path = nodemon_cpp
+	url = ../nodemon_cpp
+[submodule "nodemon_lua"]
+	path = nodemon_lua
+	url = ../nodemon_lua
+[submodule "nodemon_py"]
+	path = nodemon_py
+	url = ../nodemon_py
+[submodule "nodemon_tui"]
+	path = nodemon_tui
+	url = ../nodemon_tui
+[submodule "nodemon_msgs"]
+	path = nodemon_msgs
+	url = ../nodemon_msgs
