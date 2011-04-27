@@ -72,7 +72,7 @@ class NodeMonTUI
   void print_messages();
   void print_debug(const char *str);
   void read_key();
-  void reorder();
+  bool reorder();
   void add_node(std::string nodename, bool add_to_cache = true);
   void clear();
   void clear_messages();

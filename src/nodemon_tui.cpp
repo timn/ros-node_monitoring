@@ -296,14 +296,19 @@ NodeMonTUI::print_messages()
 
 /** Reorder nodes.
  * This recalculates the positions for all nodes.
+ * @return true if reordering has been performed, false otherwise
  */
-void
+bool
 NodeMonTUI::reorder()
 {
-  unsigned int x = NODE_START_X;
-  unsigned int y = NODE_START_Y;
+  bool changed = false;
+
+  int x = NODE_START_X;
+  int y = NODE_START_Y;
 
   for (InfoMap::iterator i = __ninfo.begin(); i != __ninfo.end(); ++i) {
+    if ((i->second.x != x) || (i->second.y != y))  changed = true;
+
     i->second.x = x;
     i->second.y = y;
 
@@ -314,6 +319,8 @@ NodeMonTUI::reorder()
       x += __node_width;
     }
   }
+
+  return changed;
 }
 
 
@@ -363,7 +370,9 @@ NodeMonTUI::add_node(std::string nodename, bool add_to_cache)
     reset_screen(/* force */ true);
   }
 
-  reorder();
+  if (reorder()) {
+    reset_screen(/* force */ true);
+  }
 
   if (add_to_cache && __cache_path != "") {
     FILE *f = fopen(__cache_path.c_str(), "a");
