@@ -53,19 +53,21 @@ NodeStatePublisher::NodeStatePublisher(ros::NodeHandle &nh)
 					   &NodeStatePublisher::heartbeat_timer_cb,
 					   this);
 
-  __state_msg.nodename = ros::this_node::getName();
-  __state_msg.state    = nodemon_msgs::NodeState::STARTING;
-  __state_msg.time     = ros::Time::now();
-  __state_msg.message  = "";
+  __state_msg.nodename         = ros::this_node::getName();
+  __state_msg.state            = nodemon_msgs::NodeState::STARTING;
+  __state_msg.time             = ros::Time::now();
+  __state_msg.machine_message  = "";
+  __state_msg.human_message    = "";
 }
 
 
 /** Destructor. */
 NodeStatePublisher::~NodeStatePublisher()
 {
-  __state_msg.state    = nodemon_msgs::NodeState::STOPPING;
-  __state_msg.time     = ros::Time::now();
-  __state_msg.message  = "";
+  __state_msg.state            = nodemon_msgs::NodeState::STOPPING;
+  __state_msg.time             = ros::Time::now();
+  __state_msg.machine_message  = "";
+  __state_msg.human_message    = "";
   publish_state();
 }
 
@@ -85,9 +87,10 @@ NodeStatePublisher::publish_state()
 void
 NodeStatePublisher::set_running()
 {
-  __state_msg.state    = nodemon_msgs::NodeState::RUNNING;
-  __state_msg.time     = ros::Time::now();
-  __state_msg.message  = "";
+  __state_msg.state            = nodemon_msgs::NodeState::RUNNING;
+  __state_msg.time             = ros::Time::now();
+  __state_msg.machine_message  = "";
+  __state_msg.human_message    = "";
   publish_state();
 }
 
@@ -96,14 +99,19 @@ NodeStatePublisher::set_running()
  * The fatal state is meant for errors from which the node cannot recover
  * without completely restarting it. The message should give a meaningful and
  * concise description of the cause of the error.
- * @param msg message describing the cause of the fatal error
+ * @param machine_msg message describing the cause of the fatal error in a
+ * machine parseable format
+ * @param machine_msg message describing the cause of the fatal error in a
+ * human readable format
  */
 void
-NodeStatePublisher::set_fatal(std::string msg)
+NodeStatePublisher::set_fatal(std::string machine_msg,
+			      std::string human_msg)
 {
-  __state_msg.state    = nodemon_msgs::NodeState::FATAL;
-  __state_msg.time     = ros::Time::now();
-  __state_msg.message  = msg;
+  __state_msg.state            = nodemon_msgs::NodeState::FATAL;
+  __state_msg.time             = ros::Time::now();
+  __state_msg.machine_message  = machine_msg;
+  __state_msg.human_message    = human_msg;
   publish_state();
 }
 
@@ -115,14 +123,19 @@ NodeStatePublisher::set_fatal(std::string msg)
  * the robot or harming humans. Once recovery is started, call set_recovering().
  * The message should give a meaningful and concise description of the cause
  * of the error.
- * @param msg message describing the cause of the fatal error
+ * @param machine_msg message describing the cause of the error in a
+ * machine parseable format
+ * @param machine_msg message describing the cause of the error in a
+ * human readable format
  */
 void
-NodeStatePublisher::set_error(std::string msg)
+NodeStatePublisher::set_error(std::string machine_msg,
+			      std::string human_msg)
 {
-  __state_msg.state    = nodemon_msgs::NodeState::ERROR;
-  __state_msg.time     = ros::Time::now();
-  __state_msg.message  = msg;
+  __state_msg.state            = nodemon_msgs::NodeState::ERROR;
+  __state_msg.time             = ros::Time::now();
+  __state_msg.machine_message  = machine_msg;
+  __state_msg.human_message    = human_msg;
   publish_state();
 }
 
@@ -132,15 +145,19 @@ NodeStatePublisher::set_error(std::string msg)
  * of returning to an operational state. During that time it cannot process
  * any new requests or commands. Once recovery is finished call set_running()
  * to indicate that the node is fully operational again.
- * @param msg a message describing the recovery method or procedure briefly,
- * e.g. "moving arm to safe position".
+ * @param machine_msg a message describing the recovery method or procedure
+ * briefly in a machine parseable format, e.g. "move_arm_safe_pos".
+ * @param human_msg a message describing the recovery method or procedure
+ * briefly in a human readable format, e.g. "moving arm to safe position".
  */
 void
-NodeStatePublisher::set_recovering(std::string msg)
+NodeStatePublisher::set_recovering(std::string machine_msg,
+				   std::string human_msg)
 {
-  __state_msg.state    = nodemon_msgs::NodeState::RECOVERING;
-  __state_msg.time     = ros::Time::now();
-  __state_msg.message  = msg;
+  __state_msg.state            = nodemon_msgs::NodeState::RECOVERING;
+  __state_msg.time             = ros::Time::now();
+  __state_msg.machine_message  = machine_msg;
+  __state_msg.human_message    = human_msg;
   publish_state();
 }
 

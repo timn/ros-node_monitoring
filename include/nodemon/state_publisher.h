@@ -35,9 +35,9 @@ class NodeStatePublisher
   ~NodeStatePublisher();
 
   void set_running();
-  void set_fatal(std::string msg);
-  void set_error(std::string msg);
-  void set_recovering(std::string msg);
+  void set_fatal(std::string machine_msg, std::string human_msg);
+  void set_error(std::string machine_msg, std::string msg);
+  void set_recovering(std::string machine_msg, std::string msg);
 
   void heartbeat_timer_cb(const ros::WallTimerEvent& event);
 

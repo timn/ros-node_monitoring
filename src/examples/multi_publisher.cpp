@@ -40,14 +40,14 @@ void timer_cb(const ros::WallTimerEvent& event)
     if (msg.state == nodemon_msgs::NodeState::RUNNING) {
       msg.time = ros::Time(event.current_real.sec, event.current_real.nsec);
     }
-    msg.message  = "";
+    msg.machine_message = msg.human_message = "";
 
     if (msg.state == nodemon_msgs::NodeState::FATAL) {
-      msg.message  = "FATAL";
+      msg.machine_message = msg.human_message = "FATAL";
     } else if (msg.state == nodemon_msgs::NodeState::ERROR) {
-      msg.message  = "ERROR";
+      msg.machine_message  = msg.human_message = "ERROR";
     } else if (msg.state == nodemon_msgs::NodeState::RECOVERING) {
-      msg.message  = "RECOVERING";
+      msg.machine_message  = msg.human_message = "RECOVERING";
     }
 
     g_pub.publish(msg);
