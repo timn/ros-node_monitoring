@@ -52,10 +52,11 @@ class NodeStatePublisher(object):
         self._state_pub = rospy.Publisher('/nodemon/state', NodeState);
         
         self._state_msg = NodeState()
-        self._state_msg.nodename = rospy.get_name()
-        self._state_msg.state    = NodeState.STARTING
-        self._state_msg.time     = rospy.Time.now()
-        self._state_msg.message  = ""
+        self._state_msg.nodename         = rospy.get_name()
+        self._state_msg.state            = NodeState.STARTING
+        self._state_msg.time             = rospy.Time.now()
+        self._state_msg.machine_message  = ""
+        self._state_msg.human_message    = ""
 
         self._timer = Timer(1.0, self.heartbeat_timer_cb)
         self._timer.start()
@@ -74,25 +75,30 @@ class NodeStatePublisher(object):
         The state publisher will start to send periodical heartbeat messages
         with updated time stamps.
         """
-        self._state_msg.state    = NodeState.RUNNING
-        self._state_msg.time     = rospy.Time.now()
-        self._state_msg.message  = ""
+        self._state_msg.state            = NodeState.RUNNING
+        self._state_msg.time             = rospy.Time.now()
+        self._state_msg.machine_message  = ""
+        self._state_msg.human_message    = ""
         self._publish_state()
 
-    def set_fatal(self, msg):
+    def set_fatal(self, machine_msg, human_msg):
         """ Set the fatal state.
         The fatal state is meant for errors from which the node cannot
         recover without completely restarting it. The message should
         give a meaningful and concise description of the cause of the
         error.
-        @param msg message describing the cause of the fatal error
+        @param machine_msg message describing the cause of the fatal
+        error in machine parseable format
+        @param human_msg message describing the cause of the fatal
+        error in human readable format
         """
-        self._state_msg.state    = NodeState.FATAL
-        self._state_msg.time     = rospy.Time.now()
-        self._state_msg.message  = msg
+        self._state_msg.state            = NodeState.FATAL
+        self._state_msg.time             = rospy.Time.now()
+        self._state_msg.machine_message  = machine_msg
+        self._state_msg.human_message    = human_msg
         self._publish_state()
 
-    def set_error(self, msg):
+    def set_error(self, machine_msg, human_msg):
         """ Set the non-fatal error state.
         The error state is meant for errors from which the node can
         recover at run-time. The node may require input from other
@@ -101,26 +107,35 @@ class NodeStatePublisher(object):
         humans. Once recovery is started, call set_recovering().  The
         message should give a meaningful and concise description of
         the cause of the error.
-        @param msg message describing the cause of the fatal error
+        @param machine_msg message describing the cause of the fatal
+        error in machine parseable format
+        @param human_msg message describing the cause of the fatal
+        error in human readable format
         """
-        self._state_msg.state    = NodeState.ERROR
-        self._state_msg.time     = rospy.Time.now()
-        self._state_msg.message  = msg
+        self._state_msg.state            = NodeState.ERROR
+        self._state_msg.time             = rospy.Time.now()
+        self._state_msg.machine_message  = machine_msg
+        self._state_msg.human_message    = human_msg
         self._publish_state()
 
-    def set_recovering(self, msg):
+    def set_recovering(self, machine_msg, human_msg):
         """ Set recovering state.
         The recovery state is meant to describe that the node is in
         the process of returning to an operational state. During that
         time it cannot process any new requests or commands. Once
         recovery is finished call set_running() to indicate that the
         node is fully operational again.
-        @param msg a message describing the recovery method or
-        procedure briefly, e.g. "moving arm to safe position".
+        @param machine_msg a message describing the recovery method or
+        procedure briefly in machine parseable format,
+        e.g. "move_arm_safe_pos".
+        @param machine_msg a message describing the recovery method or
+        procedure briefly in human readable format, e.g. "moving arm
+        to safe position".
         """
-        self._state_msg.state    = NodeState.RECOVERING
-        self._state_msg.time     = rospy.Time.now()
-        self._state_msg.message  = msg
+        self._state_msg.state            = NodeState.RECOVERING
+        self._state_msg.time             = rospy.Time.now()
+        self._state_msg.machine_message  = machine_msg
+        self._state_msg.human_message    = human_msg
         self._publish_state()
 
     def heartbeat_timer_cb(self):
