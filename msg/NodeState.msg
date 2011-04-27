@@ -8,5 +8,7 @@ uint8 STOPPING   = 5 # node is no longer functional and will soon exit
 string nodename
 time   time
 uint8  state
-string message
-
+# A machine parseable error string
+string machine_message
+# A human readable error explanation
+string human_message
