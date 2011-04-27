@@ -47,7 +47,7 @@
 NodeStatePublisher::NodeStatePublisher(ros::NodeHandle &nh)
   : __nh(nh)
 {
-  __state_pub = __nh.advertise<nodemon_msgs::NodeState>("/nodemon/state", 1);
+  __state_pub = __nh.advertise<nodemon_msgs::NodeState>("/nodemon/state", 5);
 
   __heartbeat_timer = __nh.createWallTimer(ros::WallDuration(1.0),
 					   &NodeStatePublisher::heartbeat_timer_cb,
