@@ -41,6 +41,12 @@ class NodeStatePublisher
 
   void send_warning(std::string machine_msg, std::string human_msg);
 
+  void vset_fatal(const char *machine_msg, const char *human_format, ...);
+  void vset_error(const char *machine_msg, const char *human_format, ...);
+  void vset_recovering(const char *machine_msg, const char *human_format, ...);
+
+  void vsend_warning(const char *machine_msg, const char *human_format, ...);
+
   void heartbeat_timer_cb(const ros::WallTimerEvent& event);
 
  private:

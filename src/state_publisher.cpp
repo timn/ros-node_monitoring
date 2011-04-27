@@ -24,6 +24,9 @@
 
 #include <nodemon/state_publisher.h>
 
+#include <cstdarg>
+#include <cstdio>
+
 /** @class NodeStatePublisher <nodemon_cpp/state_publisher.h>
  * Node state publisher.
  * This class provides an interface to send heartbeat messages and specific
@@ -186,6 +189,111 @@ NodeStatePublisher::send_warning(std::string machine_msg,
   __state_msg = old_state;
   publish_state();
 }
+
+/** Set the fatal state from formatted string.
+ * This is a convenience method with the same effects as set_fatal().
+ * @param machine_msg machine parseable message
+ * @param human_format Format of the human readable string
+ */
+void
+NodeStatePublisher::vset_fatal(const char *machine_msg,
+			       const char *human_format, ...)
+{
+  va_list arg;
+  va_start(arg, human_format);
+  char *human_msg;
+  if (vasprintf(&human_msg, human_format, arg) != -1) {
+    // only fails on out of memory
+    __state_msg.state            = nodemon_msgs::NodeState::FATAL;
+    __state_msg.time             = ros::Time::now();
+    __state_msg.machine_message  = machine_msg;
+    __state_msg.human_message    = human_msg;
+    publish_state();
+    free(human_msg);
+  }
+  va_end(arg);
+}
+
+
+/** Set the error state from formatted string.
+ * This is a convenience method with the same effects as set_error().
+ * @param machine_msg machine parseable message
+ * @param human_format Format of the human readable string
+ */
+void
+NodeStatePublisher::vset_error(const char *machine_msg,
+			       const char *human_format, ...)
+{
+  va_list arg;
+  va_start(arg, human_format);
+  char *human_msg;
+  if (vasprintf(&human_msg, human_format, arg) != -1) {
+    // only fails on out of memory
+    __state_msg.state            = nodemon_msgs::NodeState::ERROR;
+    __state_msg.time             = ros::Time::now();
+    __state_msg.machine_message  = machine_msg;
+    __state_msg.human_message    = human_msg;
+    publish_state();
+    free(human_msg);
+  }
+  va_end(arg);
+}
+
+
+/** Set the recovering state from formatted string.
+ * This is a convenience method with the same effects as set_recovering().
+ * @param machine_msg machine parseable message
+ * @param human_format Format of the human readable string
+ */
+void
+NodeStatePublisher::vset_recovering(const char *machine_msg,
+				    const char *human_format, ...)
+{
+  va_list arg;
+  va_start(arg, human_format);
+  char *human_msg;
+  if (vasprintf(&human_msg, human_format, arg) != -1) {
+    // only fails on out of memory
+    __state_msg.state            = nodemon_msgs::NodeState::RECOVERING;
+    __state_msg.time             = ros::Time::now();
+    __state_msg.machine_message  = machine_msg;
+    __state_msg.human_message    = human_msg;
+    publish_state();
+    free(human_msg);
+  }
+  va_end(arg);
+}
+
+
+/** Send warning message.
+ * This is a convenience method with the same effects as send_warning().
+ * @param machine_msg machine parseable message
+ * @param human_format Format of the human readable string
+ */
+void
+NodeStatePublisher::vsend_warning(const char *machine_msg,
+				  const char *human_format, ...)
+{
+  nodemon_msgs::NodeState old_state = __state_msg;
+
+  va_list arg;
+  va_start(arg, human_format);
+  char *human_msg;
+  if (vasprintf(&human_msg, human_format, arg) != -1) {
+    // only fails on out of memory
+    __state_msg.state            = nodemon_msgs::NodeState::WARNING;
+    __state_msg.time             = ros::Time::now();
+    __state_msg.machine_message  = machine_msg;
+    __state_msg.human_message    = human_msg;
+    publish_state();
+    free(human_msg);
+  }
+  va_end(arg);
+
+  __state_msg = old_state;
+  publish_state();
+}
+
 
 /** Callback for the heartbeat timer event.
  * @param event event description
