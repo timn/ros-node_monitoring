@@ -138,6 +138,39 @@ class NodeStatePublisher(object):
         self._state_msg.human_message    = human_msg
         self._publish_state()
 
+    def send_warning(self, machine_msg, human_msg):
+        """ Send warning message.
+        Warning messages are meant to indicate a serious problem to
+        the developer or user, that the node was able to work around
+        or solve this time, but that might also cause trouble. The
+        warning message is modeled as a transitional state, i.e. an
+        automatic transition is made back to the previous state after
+        the warning has been processed.
+        @param machine_msg a message describing the recovery method or
+        procedure briefly in machine parseable format,
+        e.g. "move_arm_safe_pos".
+        @param machine_msg a message describing the recovery method or
+        procedure briefly in human readable format, e.g. "moving arm
+        to safe position".
+        """
+        oldmsg = { 'state':           self._state_msg.state,
+                   'time':            self._state_msg.time,
+                   'machine_message': self._state_msg.machine_message,
+                   'human_message':   self._state_msg.human_message }
+
+        self._state_msg.state            = NodeState.WARNING
+        self._state_msg.time             = rospy.Time.now()
+        self._state_msg.machine_message  = machine_msg
+        self._state_msg.human_message    = human_msg
+        self._publish_state()
+
+        self._state_msg.state            = oldmsg['state']
+        self._state_msg.time             = oldmsg['time']
+        self._state_msg.machine_message  = oldmsg['machine_msg']
+        self._state_msg.human_message    = oldmsg['human_msg']
+        self._publish_state()
+
+
     def heartbeat_timer_cb(self):
         """ Timer callback triggering status publishing.
         This function automatically restarts the time for as long as
