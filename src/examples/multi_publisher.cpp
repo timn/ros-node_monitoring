@@ -48,6 +48,8 @@ void timer_cb(const ros::WallTimerEvent& event)
       msg.machine_message  = msg.human_message = "ERROR";
     } else if (msg.state == nodemon_msgs::NodeState::RECOVERING) {
       msg.machine_message  = msg.human_message = "RECOVERING";
+    } else if (msg.state == nodemon_msgs::NodeState::WARNING) {
+      msg.machine_message  = msg.human_message = "WARNING";
     }
 
     g_pub.publish(msg);
@@ -84,6 +86,7 @@ main(int argc, char **argv)
   add_fake_node("/test6", nodemon_msgs::NodeState::RUNNING);
   add_fake_node("/test7", nodemon_msgs::NodeState::RUNNING);
   add_fake_node("/test8", nodemon_msgs::NodeState::RUNNING);
+  add_fake_node("/test8", nodemon_msgs::NodeState::WARNING);
   add_fake_node("/test9", nodemon_msgs::NodeState::STOPPING);
 
   ros::spin();
