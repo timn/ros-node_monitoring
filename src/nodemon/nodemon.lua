@@ -156,6 +156,35 @@ function NodeStatePublisher:set_recovering(machine_message, human_format, ...)
    self:publish_state()
 end
 
+
+--- Send warning message.
+-- Warning messages are meant to indicate a serious problem to the developer
+-- or user, that the node was able to work around or solve this time, but
+-- that might also cause trouble. The warning message is modeled as a
+-- transitional state, i.e. an automatic transition is made back to the
+-- previous state after the warning has been processed.
+-- @param machine_msg a warning message describing the problem
+-- briefly in a machine parseable format
+-- @param human_format a warning message describing the problem
+-- briefly in a human readable format
+function NodeStatePublisher:send_warning(machine_message, human_format, ...)
+   local message = ""
+   if human_format then message = string.format(human_format, ...) end
+
+   local oldmsg = self.state_msg:clone()
+
+   self.state_msg.values.state    =
+      self.state_pub.msgspec.constants.WARNING.value
+   self.state_msg.values.time     = roslua.Time.now()
+   self.state_msg.values.machine_message  = machine_message
+   self.state_msg.values.human_message    = message
+   self:publish_state()
+
+   self.state_msg:copy(oldmsg)
+   self:publish_state()
+end
+
+
 --- Timer callback triggering status publishing.
 -- This function automatically restarts the time for as long as
 -- ros is not shutdown.
