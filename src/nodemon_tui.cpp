@@ -365,7 +365,7 @@ NodeMonTUI::add_node(std::string nodename, bool add_to_cache)
   info.y = 0;
   __ninfo[nodename] = info;
 
-  if ((nodename.length() + 6) > __node_width) {
+  if (((int)nodename.length() + 6) > __node_width) {
     __node_width = nodename.length() + 6;
     reset_screen(/* force */ true);
   }

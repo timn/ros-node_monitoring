@@ -86,7 +86,7 @@ class NodeMonTUI
   std::string __cache_path;
   std::string __dot_ros_dir;
 
-  unsigned int __node_width;
+  int __node_width;
   int __wnd_width;
   int __wnd_height;
 
