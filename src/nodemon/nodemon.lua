@@ -61,7 +61,8 @@ function NodeStatePublisher:new()
    o.state_msg.values.nodename = roslua.get_name()
    o.state_msg.values.state    = o.state_pub.msgspec.constants.STARTING.value
    o.state_msg.values.time     = roslua.Time.now()
-   o.state_msg.values.message  = ""
+   o.state_msg.values.machine_message  = ""
+   o.state_msg.values.human_message    = ""
 
    o.timer = roslua.timer(1.0, function (event)
 				  o:heartbeat_timer_cb(event)
@@ -89,7 +90,8 @@ end
 function NodeStatePublisher:set_running()
    self.state_msg.values.state    = self.state_pub.msgspec.constants.RUNNING.value
    self.state_msg.values.time     = roslua.Time.now()
-   self.state_msg.values.message  = ""
+   self.state_msg.values.machine_message  = ""
+   self.state_msg.values.human_message    = ""
    self:publish_state()
 end
 
@@ -98,14 +100,16 @@ end
 -- recover without completely restarting it. The message should
 -- give a meaningful and concise description of the cause of the
 -- error.
--- @param format message format describing the cause of the fatal error
+-- @param machine_message machine parseable message describing the error
+-- @param human_format message format describing the cause of the fatal error
 -- @param ... arguments as required when passing format to string.format().
-function NodeStatePublisher:set_fatal(format, ...)
+function NodeStatePublisher:set_fatal(machine_message, human_format, ...)
    local message = ""
-   if format then message = string.format(format, ...) end
+   if human_format then message = string.format(human_format, ...) end
    self.state_msg.values.state    = self.state_pub.msgspec.constants.FATAL.value
    self.state_msg.values.time     = roslua.Time.now()
-   self.state_msg.values.message  = message
+   self.state_msg.values.machine_message  = machine_message
+   self.state_msg.values.human_message    = message
    self:publish_state()
 end
 
@@ -117,14 +121,16 @@ end
 -- humans. Once recovery is started, call set_recovering().  The
 -- message should give a meaningful and concise description of
 -- the cause of the error.
--- @param format message format describing the cause of the fatal error
+-- @param machine_message machine parseable message describing the error
+-- @param human_format message format describing the cause of the fatal error
 -- @param ... arguments as required when passing format to string.format().
-function NodeStatePublisher:set_error(format, ...)
+function NodeStatePublisher:set_error(machine_message, human_format, ...)
    local message = ""
-   if format then message = string.format(format, ...) end
+   if human_format then message = string.format(human_format, ...) end
    self.state_msg.values.state    = self.state_pub.msgspec.constants.ERROR.value
    self.state_msg.values.time     = roslua.Time.now()
-   self.state_msg.values.message  = message
+   self.state_msg.values.machine_message  = machine_message
+   self.state_msg.values.human_message    = message
    self:publish_state()
 end
 
@@ -134,16 +140,19 @@ end
 -- time it cannot process any new requests or commands. Once
 -- recovery is finished call set_running() to indicate that the
 -- node is fully operational again.
--- @param format message format describing the recovery method or
+-- @param machine_message machine parseable message describing the recovery
+-- procedure briefly, e.g. "move_arm_safe_pos".
+-- @param human_format message format describing the recovery method or
 -- procedure briefly, e.g. "moving arm to safe position".
 -- @param ... arguments as required when passing format to string.format().
-function NodeStatePublisher:set_recovering(format, ...)
+function NodeStatePublisher:set_recovering(machine_message, human_format, ...)
    local message = ""
-   if format then message = string.format(format, ...) end
+   if human_format then message = string.format(human_format, ...) end
    self.state_msg.values.state    =
       self.state_pub.msgspec.constants.RECOVERING.value
    self.state_msg.values.time     = roslua.Time.now()
-   self.state_msg.values.message  = message
+   self.state_msg.values.machine_message  = machine_message
+   self.state_msg.values.human_message    = message
    self:publish_state()
 end
 
