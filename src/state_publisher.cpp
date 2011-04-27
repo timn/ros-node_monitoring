@@ -162,6 +162,31 @@ NodeStatePublisher::set_recovering(std::string machine_msg,
 }
 
 
+/** Send warning message.
+ * Warning messages are meant to indicate a serious problem to the developer
+ * or user, that the node was able to work around or solve this time, but
+ * that might also cause trouble. The warning message is modeled as a
+ * transitional state, i.e. an automatic transition is made back to the
+ * previous state after the warning has been processed.
+ * @param machine_msg a warning message describing the problem
+ * briefly in a machine parseable format
+ * @param human_msg a warning message describing the problem
+ * briefly in a human readable format
+ */
+void
+NodeStatePublisher::send_warning(std::string machine_msg,
+				 std::string human_msg)
+{
+  nodemon_msgs::NodeState old_state = __state_msg;
+  __state_msg.state            = nodemon_msgs::NodeState::WARNING;
+  __state_msg.time             = ros::Time::now();
+  __state_msg.machine_message  = machine_msg;
+  __state_msg.human_message    = human_msg;
+  publish_state();
+  __state_msg = old_state;
+  publish_state();
+}
+
 /** Callback for the heartbeat timer event.
  * @param event event description
  */

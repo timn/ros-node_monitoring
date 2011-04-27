@@ -50,6 +50,13 @@ RUNNING     (node is fully operational)
 ERROR       (node had an error and recovery is possible)
 RECOVERING  (node is recovering and currently not functional)
 FATAL       (node had a fatal error and is disfunctional, restart req.)
+WARNING     (node encountered a problematic situation but continued)
+
+Note that the WARNING state is always only transient. The state
+machine immediately transitions back to the state it was in
+before. Warning messages denote states that the developer should check
+because they might result in serious problems, but this time the
+system was able to solve it.
 
 The information is published with the NodeState message type from the
 nodemon_msgs package to the topic /nodemon/state. The heartbeat is

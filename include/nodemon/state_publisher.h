@@ -39,6 +39,8 @@ class NodeStatePublisher
   void set_error(std::string machine_msg, std::string msg);
   void set_recovering(std::string machine_msg, std::string msg);
 
+  void send_warning(std::string machine_msg, std::string human_msg);
+
   void heartbeat_timer_cb(const ros::WallTimerEvent& event);
 
  private:
