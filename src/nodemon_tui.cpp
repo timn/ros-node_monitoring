@@ -427,17 +427,19 @@ NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
   if (((msg->state == nodemon_msgs::NodeState::ERROR) ||
        (msg->state == nodemon_msgs::NodeState::FATAL) ||
        (msg->state == nodemon_msgs::NodeState::RECOVERING)) &&
-      (msg->message != "") &&
+      (msg->machine_message != "") &&
       (!__ninfo[msg->nodename].last_msg ||
        ((__ninfo[msg->nodename].last_msg->time != msg->time) &&
-	(__ninfo[msg->nodename].last_msg->message != msg->message))))
+	(__ninfo[msg->nodename].last_msg->machine_message != msg->machine_message))))
   {
     tm time_tm;
     time_t timet;
     timet = msg_walltime.sec;
     localtime_r(&timet, &time_tm);
-           // stat  date  nodename              message              NULL
-    size_t ml = 2 + 21 + msg->nodename.size() + msg->message.size() + 1;
+           // stat  date  nodename              machine message
+    size_t ml = 2 + 21 + msg->nodename.size() + msg->machine_message.size()
+      // "[...] "    human message           NULL
+      + 3 + msg->human_message.size()  + 1;
     char mstr[ml];
 
     const char *state = "F";
@@ -447,9 +449,10 @@ NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
       state = "R";
     }
 
-    sprintf(mstr, "%s %02d:%02d:%02d.%09u %s: %s", state, time_tm.tm_hour,
+    sprintf(mstr, "%s %02d:%02d:%02d.%09u %s: [%s] %s", state, time_tm.tm_hour,
 	    time_tm.tm_min, time_tm.tm_sec, msg_walltime.nsec,
-	    msg->nodename.c_str(), msg->message.c_str());
+	    msg->nodename.c_str(), msg->machine_message.c_str(),
+	    msg->human_message.c_str());
 
     message_t m;
     m.state   = msg->state;
