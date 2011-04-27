@@ -206,6 +206,11 @@ NodeMonTUI::update_screen()
 	cc = L"\u26a0";
 	break;
 
+      case nodemon_msgs::NodeState::WARNING:
+	cl = CPAIR_MAGENTA;
+	cc = L"\u26a0";
+	break;
+
       case nodemon_msgs::NodeState::FATAL:
 	cl = CPAIR_RED;
 	attrs |= A_BOLD;
@@ -271,6 +276,9 @@ NodeMonTUI::print_messages()
       break;
     case nodemon_msgs::NodeState::RECOVERING:
       cl = CPAIR_ORANGE;
+      break;
+    case nodemon_msgs::NodeState::WARNING:
+      cl = CPAIR_MAGENTA;
       break;
     default:
       cl = CPAIR_RED;
@@ -426,6 +434,7 @@ NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
 
   if (((msg->state == nodemon_msgs::NodeState::ERROR) ||
        (msg->state == nodemon_msgs::NodeState::FATAL) ||
+       (msg->state == nodemon_msgs::NodeState::WARNING) ||
        (msg->state == nodemon_msgs::NodeState::RECOVERING)) &&
       (msg->machine_message != "") &&
       (!__ninfo[msg->nodename].last_msg ||
@@ -447,6 +456,8 @@ NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
       state = "E";
     } else if (msg->state == nodemon_msgs::NodeState::RECOVERING) {
       state = "R";
+    } else if (msg->state == nodemon_msgs::NodeState::WARNING) {
+      state = "W";
     }
 
     sprintf(mstr, "%s %02d:%02d:%02d.%09u %s: [%s] %s", state, time_tm.tm_hour,
