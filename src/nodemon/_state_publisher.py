@@ -26,6 +26,7 @@
 
 import roslib; roslib.load_manifest('nodemon_py')
 import rospy
+import os.path
 
 from nodemon_msgs.msg import NodeState
 from threading import Timer
@@ -47,12 +48,19 @@ class NodeStatePublisher(object):
     @author Tim Niemueller
     """
 
-    def __init__(self):
-        """ Constructor. """
+    def __init__(self, package_name, node_type):
+        """ Constructor.
+        @param package_name the name of the package that contains the
+        node
+        @param node_type the node type, this is the name of the
+        executable, only the base name is used.
+        """
         self._state_pub = rospy.Publisher('/nodemon/state', NodeState);
         
         self._state_msg = NodeState()
         self._state_msg.nodename         = rospy.get_name()
+        self._state_msg.package          = package_name
+        self._state_msg.nodetype         = os.path.basename(node_type)
         self._state_msg.state            = NodeState.STARTING
         self._state_msg.time             = rospy.Time.now()
         self._state_msg.machine_message  = ""
@@ -63,7 +71,7 @@ class NodeStatePublisher(object):
 
     def __del__(self):
         """ Destructor. """
-        if self._timer.is_alive():
+        if hasattr(self, "_timer") and self._timer.is_alive():
             self._timer.cancel()
 
     def _publish_state(self):

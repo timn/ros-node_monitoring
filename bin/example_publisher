@@ -26,12 +26,13 @@
 
 import roslib; roslib.load_manifest('nodemon_py')
 import rospy
+import sys
 
 from nodemon import NodeStatePublisher
 
 if __name__ == '__main__':
     rospy.init_node('nodemon_example_publisher')
-    node_state = NodeStatePublisher()
+    node_state = NodeStatePublisher("nodemon_py", sys.argv[0])
     node_state.set_running()
     rospy.spin()
     del node_state
