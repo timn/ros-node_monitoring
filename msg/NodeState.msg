@@ -7,6 +7,8 @@ uint8 STOPPING   = 5 # node is no longer functional and will soon exit
 uint8 WARNING    = 6 # node encountered a problematic situation but continued
 
 string nodename
+string package
+string nodetype
 time   time
 uint8  state
 # A machine parseable error string
