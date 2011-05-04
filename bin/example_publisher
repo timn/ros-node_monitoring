@@ -30,7 +30,8 @@ roslua.init_node{master_uri=os.getenv("ROS_MASTER_URI"),
 require("nodemon")
 
 
-local node_state = nodemon.NodeStatePublisher:new()
+local node_state = nodemon.NodeStatePublisher:new("nodemon_lua",
+						  "example_publisher")
 node_state:set_running()
 
 roslua.run(10)

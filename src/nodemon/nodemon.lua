@@ -42,16 +42,19 @@
 module("nodemon", package.seeall)
 
 require("roslua")
+require("posix")
 
 NodeStatePublisher = {}
 
 --- Constructor.
--- Create a new Timer instance.
--- @param period minimum time between invocations, i.e. the desired
--- time interval between invocations. Either a number, which is considered
--- as time in seconds, or an instance of Duration.
--- @param callback function to execute when the timer is due
-function NodeStatePublisher:new()
+-- Create new node state publisher
+-- @param package_name the name of the package that contains the node
+-- @param node_type the node type, this is the name of the
+-- executable, only the base name is used.
+function NodeStatePublisher:new(package_name, node_type)
+   assert(package_name, "NodeStatePublisher: No package name passed")
+   assert(node_type, "NodeStatePublisher: No node type passed")
+
    local o = {}
    setmetatable(o, self)
    self.__index = self
@@ -59,6 +62,8 @@ function NodeStatePublisher:new()
    o.state_pub = roslua.publisher("/nodemon/state", "nodemon_msgs/NodeState")
    o.state_msg = o.state_pub.msgspec:instantiate()
    o.state_msg.values.nodename = roslua.get_name()
+   o.state_msg.values.package  = package_name
+   o.state_msg.values.nodetype = posix.basename(node_type)
    o.state_msg.values.state    = o.state_pub.msgspec.constants.STARTING.value
    o.state_msg.values.time     = roslua.Time.now()
    o.state_msg.values.machine_message  = ""
@@ -67,8 +72,6 @@ function NodeStatePublisher:new()
    o.timer = roslua.timer(1.0, function (event)
 				  o:heartbeat_timer_cb(event)
 			       end)
-
-   --o:publish_state()
 
    return o
 end
