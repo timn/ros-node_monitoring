@@ -38,7 +38,7 @@
 #define NODE_START_X 2
 #define NODE_START_Y 2
 
-#define NUM_MSG_LINES 6
+#define NUM_MSG_LINES 16
 #define MAX_NUM_MSGS 100
 
 #define UPDATE_INTERVAL_SEC 0.2
