@@ -29,7 +29,7 @@
 int
 main(int argc, char **argv)
 {
-  ros::init(argc, argv, "nodemon_subex");
+  ros::init(argc, argv, "nodemon_tui");
   ros::NodeHandle n;
 
   if (!setlocale(LC_CTYPE, "")) {
