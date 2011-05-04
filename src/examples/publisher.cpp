@@ -32,7 +32,8 @@ main(int argc, char **argv)
   ros::init(argc, argv, "nodemon_pubex");
   ros::NodeHandle n;
 
-  NodeStatePublisher sp(n);
+  NodeStatePublisher sp("nodemon_cpp", argv[0], n);
+  sp.set_running();
 
   ros::spin();
 }

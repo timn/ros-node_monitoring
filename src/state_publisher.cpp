@@ -26,6 +26,7 @@
 
 #include <cstdarg>
 #include <cstdio>
+#include <cstring>
 
 /** @class NodeStatePublisher <nodemon_cpp/state_publisher.h>
  * Node state publisher.
@@ -45,9 +46,14 @@
  */
 
 /** Constructor.
+ * @param package_name the name of the package that contains the node
+ * @param node_type the node type, this is the name of the executable,
+ * only the base name is used.
  * @param nh node handle to register with
  */
-NodeStatePublisher::NodeStatePublisher(ros::NodeHandle &nh)
+NodeStatePublisher::NodeStatePublisher(const char *package_name,
+				       const char *node_type,
+				       ros::NodeHandle &nh)
   : __nh(nh)
 {
   __state_pub = __nh.advertise<nodemon_msgs::NodeState>("/nodemon/state", 5);
@@ -57,6 +63,14 @@ NodeStatePublisher::NodeStatePublisher(ros::NodeHandle &nh)
 					   this);
 
   __state_msg.nodename         = ros::this_node::getName();
+  __state_msg.package          = package_name;
+#ifdef _GNU_SOURCE
+  __state_msg.nodetype         = basename(node_type);
+#else
+  char *tmp = strdup(node_type);
+  __state_msg.nodetype         = basename(node_type);
+  free(tmp);
+#endif
   __state_msg.state            = nodemon_msgs::NodeState::STARTING;
   __state_msg.time             = ros::Time::now();
   __state_msg.machine_message  = "";

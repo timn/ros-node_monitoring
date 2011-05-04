@@ -31,7 +31,8 @@
 class NodeStatePublisher
 {
  public:
-  NodeStatePublisher(ros::NodeHandle &nh);
+  NodeStatePublisher(const char *package_name, const char *node_type,
+		     ros::NodeHandle &nh);
   ~NodeStatePublisher();
 
   void set_running();
