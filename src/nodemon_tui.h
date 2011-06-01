@@ -76,6 +76,7 @@ class NodeMonTUI
   void add_node(std::string nodename, bool add_to_cache = true);
   void clear();
   void clear_messages();
+  void show_info();
 
  private:
   ros::NodeHandle &__nh;
@@ -102,8 +103,9 @@ class NodeMonTUI
   InfoMap __ninfo;
 
   typedef struct {
-    uint8_t state;
-    std::string message;
+    uint8_t     state;
+    std::string text;
+    nodemon_msgs::NodeState::ConstPtr msg;
   } message_t;
   std::list<message_t> __messages;
   std::list<message_t>::size_type __msg_start;

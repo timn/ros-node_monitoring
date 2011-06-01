@@ -287,7 +287,7 @@ NodeMonTUI::print_messages()
     }
     attrs |= COLOR_PAIR(cl);
     wattron(__win_msgs, attrs);
-    mvwaddstr(__win_msgs, y++, 0, m->message.c_str());
+    mvwaddstr(__win_msgs, y++, 0, m->text.c_str());
     wattroff(__win_msgs, attrs);
   }
   wrefresh(__win_msgs);
@@ -336,7 +336,6 @@ NodeMonTUI::read_key()
     if (__msg_start > 0) {
       --__msg_start;
       print_messages();
-      print_debug("UP");
     }
   } else if (key == KEY_DOWN) {
     if (__msg_start < __messages.size() - NUM_MSG_LINES) {
@@ -349,6 +348,8 @@ NodeMonTUI::read_key()
     clear();
   } else if (key == 'C') {
     clear_messages();
+  } else if (key == 'i') {
+    show_info();
   }
 }
 
@@ -417,6 +418,29 @@ NodeMonTUI::clear_messages()
   print_messages();
 }
 
+
+/** Show info of most recent error. */
+void
+NodeMonTUI::show_info()
+{
+  if (__messages.empty()) {
+    print_debug("No message received");
+  } else {
+    std::list<message_t>::iterator m;
+    for (m = __messages.begin(); m != __messages.end(); ++m) {
+      if ((m->state == nodemon_msgs::NodeState::ERROR) ||
+	  (m->state == nodemon_msgs::NodeState::FATAL) )
+      {
+	std::string cmd = "gnome-open http://localhost:10117/errorkb" +
+	  m->msg->nodename + "/" + m->msg->machine_message;
+	system(cmd.c_str());
+	break;
+      }
+    }
+    print_debug("No recent error message");
+  }
+}
+
 /** Callback for update timer event.
  * @param event event information
  */
@@ -475,8 +499,9 @@ NodeMonTUI::node_state_cb(const nodemon_msgs::NodeState::ConstPtr &msg)
 	    msg->human_message.c_str());
 
     message_t m;
-    m.state   = msg->state;
-    m.message = mstr;
+    m.state = msg->state;
+    m.text  = mstr;
+    m.msg   = msg;
 
     __messages.push_front(m);
     __msg_start = 0;
