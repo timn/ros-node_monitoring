@@ -37,9 +37,9 @@ void timer_cb(const ros::WallTimerEvent& event)
   std::map<std::string, nodemon_msgs::NodeState>::iterator p;
   for (p = g_nodes.begin(); p != g_nodes.end(); ++p) {
     nodemon_msgs::NodeState &msg = p->second;
-    if (msg.state == nodemon_msgs::NodeState::RUNNING) {
+    //if (msg.state == nodemon_msgs::NodeState::RUNNING) {
       msg.time = ros::Time(event.current_real.sec, event.current_real.nsec);
-    }
+    //}
     msg.machine_message = msg.human_message = "";
 
     if (msg.state == nodemon_msgs::NodeState::FATAL) {
@@ -62,6 +62,8 @@ add_fake_node(std::string nodename, uint8_t state)
 {
   nodemon_msgs::NodeState msg;
   msg.nodename = nodename;
+  msg.package = "nodemon_cpp";
+  msg.nodetype = "example_multi_publisher";
   msg.state = state;
   msg.time = ros::Time::now();
 
