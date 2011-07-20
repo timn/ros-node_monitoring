@@ -1,0 +1,119 @@
+/**
+\mainpage
+\htmlinclude manifest.html
+
+\b Library to publish node state information.
+
+<!-- 
+Provide an overview of your package.
+-->
+
+The intent of the library is to make nodes send out heartbeat messages
+which track its state and provide additional information, for example
+error messages.
+
+Currently, nodes run without any automated monitoring. They produce a
+lot of output messages. A lot which are meaningful only to the
+original developer or which are almost always irrelevant. In the case
+of errors, the relevant information is hard to spot, especially in
+stressful situations like running tests.
+
+We want to improve the situation in certain ways:
+1.) Provide a way to push information relevant to users of a module
+independently of their knowledge of the inner workings of the module
+2.) Prune as much irrelevant information from daily work as possible
+3.) Automate process monitoring and prepare for an upcoming automated
+monitoring node, which will analyze the information, evaluate its
+meaning, and provide signals or suggestions to the behavior system.
+In general, we want one topics, on which process state information is
+frequently sent (heartbeat) and where additional messages are posted
+(critical errors). This channel (in addition to the existing ones like
+log messages and data output) provides module developers with a
+facility to post explicit, and infrequent messages that require
+attention by either another component, or the operator (and in that
+regard it particularly differs from /rosout). It shall not replace the
+need to provide proper result and failure messages to actions and
+service calls. Although we anticipate that these will often be the same,
+the immediate action error message will be the primary source of
+information for the behavior system to make decisions, while the process
+monitoring will allow for a more global view onto the system, especially
+by its human operator.
+
+Technical Solution:
+Process monitoring will be implemented as a process state
+tracker. Each node regularly publishes a message indicating its
+state The state is one of the following.
+
+STARTING    (node is currently started and not yet functional)
+STOPPING    (node is no longer functional and will soon exit)
+RUNNING     (node is fully operational)
+ERROR       (node had an error and recovery is possible)
+RECOVERING  (node is recovering and currently not functional)
+FATAL       (node had a fatal error and is disfunctional, restart req.)
+WARNING     (node encountered a problematic situation but continued)
+
+Note that the WARNING state is always only transient. The state
+machine immediately transitions back to the state it was in
+before. Warning messages denote states that the developer should check
+because they might result in serious problems, but this time the
+system was able to solve it.
+
+The information is published with the NodeState message type from the
+nodemon_msgs package to the topic /nodemon/state. The heartbeat is
+sent out once every second. The state set last is repeated in each
+message. When in RUNNING state, the timestamp is automatically
+updated. In other states the user can call the appropriate set methods
+more often when useful. The nodemon_tui program can be used to monitor
+nodes.
+
+\section codeapi Code API
+
+<!--
+Provide links to specific auto-generated API documentation within your
+package that is of particular interest to a reader. Doxygen will
+document pretty much every part of your code, so do your best here to
+point the reader to the actual API.
+
+If your codebase is fairly large or has different sets of APIs, you
+should use the doxygen 'group' tag to keep these APIs together. For
+example, the roscpp documentation has 'libros' group.
+-->
+
+To use this code, instantiate a NodeStatePublisher during the
+initialization of your application like this:
+@code
+  ros::NodeHandle nh;
+  NodeStatePublisher node_state(nh);
+@endcode
+
+As soon as your initialization is complete and the node is ready to
+receive requests, process commands, or provide data call the
+NodeStatePublisher::set_running() method. The node state publisher
+will start to send periodical heartbeats with updated time stamps.
+@code
+  node_state.set_running();
+@endcode
+
+In case of an error, call NodeStatePublisher::set_error() with an
+appropriate message like this:
+@code
+  node_state.set_error("Start configuration in collision.");
+@endcode
+
+If automatic recovery is possible and desired, call
+NodeStatePublisher::set_recovering() and start the recovery. The node
+may also wait for output from the outside to initiate a recovery
+action, for example if there are multiple choices. The node may also
+decide to skip recovery and go back to the RUNNING state immediately.
+For example:
+@code
+  if (recovery_required) {
+    node_state.set_recovery("Nudging arm automatically");
+  } else {
+    // more requests are possible and may just work, we just got bad
+    // parameters.
+    node_state.set_running();
+  }
+@endcode
+
+*/

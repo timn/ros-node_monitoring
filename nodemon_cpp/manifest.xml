@@ -1,0 +1,15 @@
+<package>
+  <description brief="nodemon_cpp">
+    Node monitoring C++ library.
+  </description>
+  <author>Tim Niemueller</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/nodemon_cpp</url>
+    <export>
+      <cpp cflags="-I${prefix}/include" lflags="-Wl,-rpath,${prefix}/lib -L${prefix}/lib -lnodemon"/>
+    </export>
+  <depend package="roscpp"/>
+  <depend package="nodemon_msgs"/>
+</package>
+
