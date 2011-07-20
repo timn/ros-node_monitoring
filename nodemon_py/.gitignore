@@ -1,0 +1,12 @@
+*~
+*.pyc
+/_build/
+/doc/
+/lib/
+/msg_gen/
+/msg/*/
+/ROS_NOBUILD
+/src/*/srv/
+/src/*/msg/
+/srv_gen/
+/srv/*/
