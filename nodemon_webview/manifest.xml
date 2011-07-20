@@ -1,0 +1,15 @@
+<package>
+  <description brief="nodemon_webview">
+   Webview extension for nodemon information.
+  </description>
+  <author>Tim Niemueller</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/nodemon_webview</url>
+  <depend package="roscpp"/>
+  <depend package="rospack"/>
+  <depend package="rosfawkes"/>
+  <depend package="webview_msgs"/>
+</package>
+
+
