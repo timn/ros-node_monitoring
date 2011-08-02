@@ -59,7 +59,7 @@ function NodeStatePublisher:new(package_name, node_type)
    setmetatable(o, self)
    self.__index = self
 
-   o.state_pub = roslua.publisher("/nodemon/state", "nodemon_msgs/NodeState")
+   o.state_pub = roslua.publisher("/nodemon/state", "nodemon_msgs/NodeState", true)
    o.state_msg = o.state_pub.msgspec:instantiate()
    o.state_msg.values.nodename = roslua.get_name()
    o.state_msg.values.package  = package_name
@@ -68,6 +68,7 @@ function NodeStatePublisher:new(package_name, node_type)
    o.state_msg.values.time     = roslua.Time.now()
    o.state_msg.values.machine_message  = ""
    o.state_msg.values.human_message    = ""
+   o:publish_state()
 
    o.timer = roslua.timer(1.0, function (event)
 				  o:heartbeat_timer_cb(event)
@@ -159,7 +160,6 @@ function NodeStatePublisher:set_recovering(machine_message, human_format, ...)
    self:publish_state()
 end
 
-
 --- Send warning message.
 -- Warning messages are meant to indicate a serious problem to the developer
 -- or user, that the node was able to work around or solve this time, but
@@ -186,7 +186,6 @@ function NodeStatePublisher:send_warning(machine_message, human_format, ...)
    self.state_msg:copy(oldmsg)
    self:publish_state()
 end
-
 
 --- Timer callback triggering status publishing.
 -- This function automatically restarts the time for as long as
