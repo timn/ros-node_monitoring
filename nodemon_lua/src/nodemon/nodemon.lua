@@ -94,6 +94,12 @@ function NodeStatePublisher:publish_state()
    self.state_pub:publish(self.state_msg)
 end
 
+--- Update timestamp and publish state.
+function NodeStatePublisher:ping()
+   self.state_msg.values.time  = roslua.Time.now()
+   self.state_pub:publish(self.state_msg)
+end
+
 --- Set the running state.
 -- The state publisher will start to send periodical heartbeat messages
 -- with updated time stamps.
