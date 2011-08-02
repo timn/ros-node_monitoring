@@ -74,14 +74,20 @@ function NodeStatePublisher:new(package_name, node_type)
 				  o:heartbeat_timer_cb(event)
 			       end)
 
+   roslua.add_finalizer(o)
+
    return o
 end
 
 --- Finalize instance.
 function NodeStatePublisher:finalize()
    roslua.registry.unregister_timer(self.timer)
+   self.state_msg.values.state = self.state_pub.msgspec.constants.STOPPING.value
+   self.state_msg.values.time  = roslua.Time.now()
+   self.state_msg.values.machine_message  = ""
+   self.state_msg.values.human_message    = ""
+   self:publish_state()
 end
-
 
 --- Publish current state.
 function NodeStatePublisher:publish_state()
