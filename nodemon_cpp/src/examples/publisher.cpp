@@ -35,5 +35,13 @@ main(int argc, char **argv)
   NodeStatePublisher sp("nodemon_cpp", argv[0], n);
   sp.set_running();
 
+  if (argc > 1) {
+    if (strcmp(argv[1], "ERROR") == 0) {
+      sp.set_error("broken", "Broken");
+    } else if (strcmp(argv[1], "FATAL") == 0) {
+      sp.set_fatal("broken", "Broken");
+    }
+  }
+
   ros::spin();
 }
